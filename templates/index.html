@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Scheduler</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.2/css/bulma.min.css">
+</head>
+<body>
+<section class="section">
+    <div class="container">
+        <h1 class="title has-text-centered">Production Scheduler</h1>
+        <div class="columns is-centered">
+            <div class="column is-half">
+                <form action="/submit" method="post">
+                    <!-- Actor Data Input as Table -->
+                    <div class="field">
+                        <label class="label">Actor Data</label>
+                        <div class="control">
+                            <table class="table is-fullwidth" id="actor-table">
+                                <thead>
+                                <tr>
+                                    <th>Actor Name</th>
+                                    <th>Salary per day</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <!-- Initial Row for Actor Data -->
+                                <tr>
+                                    <td>
+                                        <input class="input actor-name" type="text" name="actorName[]"
+                                               placeholder="e.g. Alex Smith" required onblur="fixDuplicateActorName()"> 
+                                    </td>
+                                    <td>
+                                        <input class="input" type="number" name="actorSalary[]"
+                                               placeholder="e.g. 250">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="button is-danger" onclick="removeRowActor(this)">
+                                            Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <button type="button" class="button is-primary" onclick="addRow()">
+                                Add Actor
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scene Data Input as Table -->
+                    <div class="field">
+                        <label class="label">Scene Data</label>
+                        <div class="control">
+                            <table class="table is-fullwidth" id="scene-table">
+                                <thead>
+                                <tr>
+                                    <th>Scene Name</th>
+                                    <th>Actors</th>
+                                    <th>Edit Actors</th>
+                                    <th>Edit Scene</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <!-- Initial Row for Scene Data -->
+                                <tr class="scene-row">
+                                    <td>
+                                        <input class="input scene-name" type="text" name="sceneName[]"
+                                               placeholder="e.g. Intro Scene">
+                                    </td>   
+                                    <td>
+                                        <div class="selected-actors"></div>
+                                        <input class="hidden-actors" type="hidden" name="sceneActors[]">
+                                    </td>
+                                    <td>
+                                        <button type="button" class="button is-primary" onclick="openActorModal(this)">
+                                            Select Actors
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="button is-danger" onclick="removeRow(this)">
+                                            Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <button type="button" class="button is-primary" onclick="addSceneRow()">
+                                Add Scene
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Max Scenes per Day -->
+                    <div class="field">
+                        <label class="label">Max Scenes per Day</label>
+                        <div class="control">
+                            <input class="input" type="number" name="maxSceneperDay"
+                                   placeholder="Enter maximum scenes per day">
+                        </div>
+                    </div>
+
+                    <!-- Max Number of Days -->
+                    <div class="field">
+                        <label class="label">Max Number of Days</label>
+                        <div class="control">
+                            <input class="input" type="number" name="maxNumDays"
+                                   placeholder="Enter maximum number of days">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="control mr-100px">
+                          
+                            <button type="submit" class="button is-primary mr-5">
+                                Submit
+                            </button>
+
+                            <button type="button" class="button is-info" onclick="exampleData()">
+                              Example Data
+                          </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal for Actor Selection -->
+<div id="actorModal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+        <div class="box">
+            <h3 class="title is-4 has-text-centered">Edit Actors Selected</h3>
+            <div class="field" id="actorChecklist">
+                <!-- Actor checklist will be populated dynamically -->
+            </div>
+            <button class="button is-primary" onclick="closeActorModal()">
+                Done
+            </button>
+        </div>
+    </div>
+    <button class="modal-close is-large" aria-label="close" onclick="closeActorModal()"></button>
+</div>
+
+</section>
+
+</body>
+</html>
+
+
+    <!-- JavaScript for Dynamic Table Rows and Modal -->
+    <script>
+
+      function exampleData() {
+        // Example data for actors and scenes
+        const actors = [
+          { name: "Alex Smith", salary: 250 },
+          { name: "Emily Johnson", salary: 300 },
+          { name: "Michael Davis", salary: 200 },
+        ];
+
+        const scenes = [
+          { name: "Intro Scene", actors: ["Alex Smith", "Emily Johnson"] },
+          { name: "Action Scene", actors: ["Michael Davis"] },
+        ];
+
+        // Populate actor table with example data
+        const actorTable = document.querySelector("#actor-table tbody");
+        actorTable.innerHTML = "";
+        actors.forEach((actor) => {
+          const newRow = document.createElement("tr");
+          newRow.innerHTML = `
+                <td><input class="input actor-name" type="text" name="actorName[]" value="${actor.name}" required onblur="fixDuplicateActorName()"> </td>
+                <td><input class="input" type="number" name="actorSalary[]" value="${actor.salary}" required></td>
+                <td><button type="button" class="button is-danger" onclick="removeRowActor(this)">Remove</button></td>
+            `;
+          actorTable.appendChild(newRow);
+        });
+
+        // Populate scene table with example data
+        const sceneTable = document.querySelector("#scene-table tbody");
+        sceneTable.innerHTML = "";
+        scenes.forEach((scene) => {
+          const newRow = document.createElement("tr");
+          newRow.classList.add("scene-row");
+          newRow.innerHTML = `
+            <td><input class="input scene-name" type="text" name="sceneName[]" value="${scene.name}"></td>
+            <td>
+                <div class="selected-actors">
+                    ${scene.actors.map((actor) => `<div class="actor-selected" style="background-color: ${getColorForActor(actor)}">${actor}</div>`).join("")}
+                </div>
+                <input class="hidden-actors" type="hidden" name="sceneActors[]" value="${scene.actors.join(",")}">
+            </td>
+            <td><button type="button" class="button is-primary" onclick="openActorModal(this)">Select Actors</button></td>
+            <td><button type="button" class="button is-danger" onclick="removeRow(this)">Remove</button></td>
+        `;
+          sceneTable.appendChild(newRow);
+
+          //Max scenes per day
+          document.querySelector("input[name='maxSceneperDay']").value = 2;
+          //Max number of days
+          document.querySelector("input[name='maxNumDays']").value = 30;
+        });
+      }
+
+      function fixDuplicateActorName() {
+        //Add incrementing number to duplicate actor names
+        const actorRows = document.querySelectorAll("#actor-table tbody tr");
+        const actorNames = new Set();
+        actorRows.forEach((row) => {
+          const actorNameInput = row.querySelector(".actor-name");
+          const actorName = actorNameInput.value.trim();
+          if (actorNames.has(actorName)) {
+            let count = 1;
+            let newName = `${actorName} ${count}`;
+            while (actorNames.has(newName)) {
+              count++;
+              newName = `${actorName} ${count}`;
+            }
+            actorNameInput.value = newName;
+            actorNames.add(newName);
+          } else {
+            actorNames.add(actorName);
+          }
+        });
+      }
+
+      function addRow() {
+        const tableBody = document.querySelector("#actor-table tbody");
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+                <td><input class="input actor-name" type="text" name="actorName[]" placeholder="e.g. Alex Smith" required onblur="fixDuplicateActorName()"> </td>
+                <td><input class="input" type="number" name="actorSalary[]" placeholder="e.g. 250" required></td>
+                <td><button type="button" class="button is-danger" onclick="removeRowActor(this)">Remove</button></td>
+            `;
+        tableBody.appendChild(newRow);
+      }
+
+      function addSceneRow() {
+        const tableBody = document.querySelector("#scene-table tbody");
+        const newRow = document.createElement("tr");
+        newRow.classList.add("scene-row");
+        newRow.innerHTML = `
+        <td><input class="input scene-name" type="text" name="sceneName[]" placeholder="e.g. Intro Scene"></td>
+        <td>
+            <div class="selected-actors"></div>
+            <input class="hidden-actors" type="hidden" name="sceneActors[]">
+        </td>
+        <td><button type="button" class="button is-primary" onclick="openActorModal(this)">Select Actors</button></td>
+        <td><button type="button" class="button is-danger" onclick="removeRow(this)">Remove</button></td>
+    `;
+        tableBody.appendChild(newRow);
+      }
+
+      function removeRowActor(button) {
+        const actorRow = button.closest("tr");
+        const actorNameInput = actorRow.querySelector(".actor-name");
+        const actorName = actorNameInput.value.trim();
+
+        // Remove the actor row from the actor table
+        actorRow.remove();
+
+        // Update all scene rows to remove selected actors with the deleted actor's name
+        const sceneRows = document.querySelectorAll("#scene-table tbody tr.scene-row");
+        sceneRows.forEach((sceneRow) => {
+            const selectedActorsContainer = sceneRow.querySelector(".selected-actors");
+            const actorLabels = selectedActorsContainer.querySelectorAll(".actor-selected");
+
+            actorLabels.forEach((label) => {
+                if (label.textContent === actorName) {
+                    label.remove(); // Remove the actor label from the scene row
+                }
+            });
+
+            updateHiddenActors(sceneRow); // Update hidden-actors input for the current scene row
+            //Print the actor name
+            console.log(actorName);
+            updateActorColumn(actorName); // Update actor name input for the current scene row
+        });
+    }
+
+    function updateActorColumn(actorName) {
+        const actorRows = document.querySelectorAll("#actor-table tbody tr");
+
+        actorRows.forEach((row) => {
+            const actorNameInput = row.querySelectorAll(".actor-selected");
+            actorNameInput.forEach((input) => {
+                if (input.value === actorName) {
+                    input.remove();
+                }
+            });
+        });
+    }
+
+      function removeRow(button) {
+        const row = button.closest("tr");
+        row.remove();
+      }
+
+      function openActorModal(button) {
+        const modal = document.querySelector("#actorModal");
+        modal.classList.add("is-active");
+
+        const actorChecklist = document.querySelector("#actorChecklist");
+        actorChecklist.innerHTML = "";
+
+        // Find the parent scene row of the clicked button
+        const sceneRow = button.closest(".scene-row");
+        const hiddenInput = sceneRow.querySelector(".hidden-actors");
+        const selectedActors = hiddenInput.value.split(",");
+
+        // Retrieve all actor names from the actor table
+        const actorRows = document.querySelectorAll("#actor-table tbody tr");
+
+        actorRows.forEach((row) => {
+          const actorNameInput = row.querySelector(".actor-name");
+          const actorName = actorNameInput.value.trim();
+
+          // Skip if actor name is empty
+          if (actorName === "") {
+            return;
+          }
+
+          const isChecked = selectedActors.includes(actorName);
+
+          // Create a checkbox for each actor
+          const checkboxLabel = document.createElement("label");
+          checkboxLabel.classList.add("checkbox");
+
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = actorName;
+          checkbox.checked = isChecked;
+          checkbox.onchange = () => toggleActorSelection(checkbox, sceneRow); // Pass sceneRow to toggleActorSelection
+
+          checkboxLabel.appendChild(checkbox);
+          checkboxLabel.appendChild(document.createTextNode(actorName));
+
+          actorChecklist.appendChild(checkboxLabel);
+        });
+      }
+
+      function closeActorModal() {
+        const modal = document.querySelector("#actorModal");
+        modal.classList.remove("is-active");
+      }
+
+      // Dictionary to store colors for each actor
+      const actorColorMap = {};
+
+      // Function to generate a random bright color that contrasts well with black text
+      function getRandomColor() {
+        const letters = "0123456789ABCDEF";
+        let color = "#";
+
+        // Generate a color that is bright and contrasts well with black text
+        const baseColor = [100, 100, 100]; // Start with a light gray base color
+
+        for (let i = 0; i < 3; i++) {
+          // Adjust the color components to create a bright color
+          const randomComponent = Math.floor(Math.random() * 56) + 200; // Random number between 200 and 255
+          baseColor[i] = randomComponent;
+        }
+
+        // Convert RGB components to hex and format as a color string
+        color = `rgb(${baseColor[0]}, ${baseColor[1]}, ${baseColor[2]})`;
+
+        return color;
+      }
+
+      function getColorForActor(actorName) {
+        // Check if the actor already has a color assigned
+        if (!actorColorMap[actorName]) {
+          // Generate a new color for the actor
+          actorColorMap[actorName] = getRandomColor();
+        }
+
+        return actorColorMap[actorName];
+      }
+
+      // Function to toggle actor selection and update color-coded labels
+      function toggleActorSelection(checkbox, sceneRow) {
+        const selectedActorsContainer =
+          sceneRow.querySelector(".selected-actors");
+
+        if (checkbox.checked) {
+          const actorName = checkbox.value;
+
+          // Create a colored label for the selected actor
+          const actorLabel = document.createElement("div");
+          actorLabel.classList.add("actor-selected");
+          actorLabel.textContent = actorName;
+          actorLabel.style.backgroundColor = getColorForActor(actorName);
+
+          selectedActorsContainer.appendChild(actorLabel);
+        } else {
+          // Remove the actor label if unchecked
+          const actorLabels =
+            selectedActorsContainer.querySelectorAll(".actor-selected");
+          actorLabels.forEach((label) => {
+            if (label.textContent === checkbox.value) {
+              label.remove();
+            }
+          });
+        }
+
+        updateHiddenActors(sceneRow); // Update hidden-actors input for the current scene row
+      }
+
+      // Function to update hidden-actors input based on selected actors
+      function updateHiddenActors(sceneRow) {
+        const selectedActorsContainer = sceneRow.querySelector(".selected-actors");
+        const actorLabels = selectedActorsContainer.querySelectorAll(".actor-selected");
+        const hiddenInput = sceneRow.querySelector(".hidden-actors");
+        const selectedActorNames = Array.from(actorLabels).map(
+            (label) => label.textContent
+        );
+        hiddenInput.value = selectedActorNames.join(",");
+        }
+
+        async function submitForm(event) {
+    event.preventDefault(); // Prevent default form submission behavior (page reload)
+
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch(form.action, {
+            method: form.method,
+            body: formData,
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        updateScheduleTable(data); // Call function to update schedule table with received data
+    } catch (error) {
+        console.error('Error submitting form:', error);
+    }
+}
+
+function updateScheduleTable(data) {
+    const scheduleTable = document.getElementById("scheduleTable");
+    scheduleTable.innerHTML = ""; // Clear existing content
+
+    const table = document.createElement("table");
+    table.classList.add("table");
+
+    const thead = document.createElement("thead");
+    const tbody = document.createElement("tbody");
+
+    const headerRow = document.createElement("tr");
+    data.columns.forEach((column) => {
+        const th = document.createElement("th");
+        th.textContent = column;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    data.index.forEach((rowIndex) => {
+        const tr = document.createElement("tr");
+        const rowData = data.data[rowIndex];
+        data.columns.forEach((column) => {
+            const td = document.createElement("td");
+            td.textContent = rowData[column];
+            if (rowData[column] === 1) {
+                td.style.backgroundColor = "green";
+            } else {
+                td.style.backgroundColor = "red";
+            }
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    scheduleTable.appendChild(table);
+
+    // Optional: Scroll to the schedule table
+    scheduleTable.scrollIntoView({ behavior: "smooth" });
+}
+
+// Attach event listener to the form submission
+const form = document.getElementById("schedulerForm");
+form.addEventListener("submit", submitForm);
+  </script>
+  </body>
+</html>
