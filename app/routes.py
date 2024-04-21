@@ -123,30 +123,5 @@ def submit():
     if schedule is None:
         return "No feasible schedule found. Please adjust your inputs."
 
-    return render_template_string(render_schedule_table(schedule))
-
-def render_schedule_table(schedule_df):
-    table_html = '<div class="table-container">'
-    table_html += '<table class="table is-bordered is-hoverable is-fullwidth">'
-    
-    # Table Head
-    table_html += '<thead><tr><th>Actor</th>'
-    for col in schedule_df.columns:
-        table_html += f'<th>Day {col}</th>'
-    table_html += '</tr></thead>'
-    
-    # Table Body
-    table_html += '<tbody>'
-    for index, row in schedule_df.iterrows():
-        table_html += f'<tr><td>{index}</td>'
-        for val in row:
-            cell_class = 'has-background-success' if val == 1 else 'has-background-danger'
-            table_html += f'<td class="{cell_class}">{val}</td>'
-        table_html += '</tr>'
-    table_html += '</tbody>'
-    
-    table_html += '</table>'
-    table_html += '</div>'  # Close table-container div
-
-    return table_html
-
+    # Return JSON response
+    return schedule.to_json()
