@@ -7,7 +7,7 @@ This Flask-based web application optimizes the scheduling of actors for scenes i
 Note: Due to free plan, might take longer the first time.
 
 ### Math Perspective into it
-[Notion page Here](https://inzaghi.notion.site/Optimize-Movie-Shooting-Schedule-Artifact-5-56a647d0cc004cbb888874d4a949f1d2)
+[Explained in my Notion page here](https://inzaghi.notion.site/Optimize-Movie-Shooting-Schedule-Artifact-5-56a647d0cc004cbb888874d4a949f1d2)
 
 ## Features
 
