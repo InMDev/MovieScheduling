@@ -2,6 +2,13 @@
 
 This Flask-based web application optimizes the scheduling of actors for scenes in a movie production using OR-tools. It allows users to input constraints such as the number of days available, maximum scenes per day, actors' availability, and scene requirements to generate an optimized shooting schedule.
 
+### Live Demo
+[Link Here](https://moviescheduling.onrender.com/)
+Note: Due to free plan, might take longer the first time.
+
+### Math Perspective into it
+[Notion page Here](https://inzaghi.notion.site/Optimize-Movie-Shooting-Schedule-Artifact-5-56a647d0cc004cbb888874d4a949f1d2)
+
 ## Features
 
 - **Input Form**: Users can specify the number of days available (`maxNumDays`), maximum scenes that can be shot in a day (`maxSceneperDay`), actors' names, and their daily salaries, as well as scenes with required actors.
